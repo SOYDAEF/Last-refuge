@@ -244,6 +244,7 @@ const UI = (() => {
   function closeInv() {
     if (!app.invOpen) return;
     app.invOpen = false; inv.classList.add("hidden");
+    app.contIgnore = performance.now() + 800;
     if (app.game && app.game.p.open) { app.act("closec"); if (app.mode === "client") { app.game.p.open = null; app.game.p.cview = null; } }
   }
   function row(item, qty, mine, cv) {

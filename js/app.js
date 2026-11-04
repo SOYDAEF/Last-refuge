@@ -392,6 +392,10 @@ class App {
         if (this.saveT > 90) { this.saveT = 0; this.saveGame(true); }
       }
     }
+    // al abrir un mueble o cofre se abre solo el inventario con lo que tiene dentro
+    const op = g.p.open ? g.p.open.join(",") : "";
+    if (op && op !== this.contPrev && !this.invOpen && !this.menuOpen && performance.now() > (this.contIgnore || 0)) UI.openInv();
+    this.contPrev = op;
     if (this.invOpen) UI.refreshInv();
     this.playT = (this.playT || 0) + dt;
     if (this.playT > 25 && !this.hintHidden) { this.hintHidden = true; document.getElementById("tHint").classList.add("hidden"); }
