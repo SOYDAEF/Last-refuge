@@ -4,7 +4,4 @@
  *   { urls: ["turn:servidor:3478", "turn:servidor:3478?transport=tcp"], username: "usuario", credential: "clave" }
  */
 "use strict";
-const TURN_SERVERS = [
-  { urls: ["turn:free.expressturn.com:3478", "turn:free.expressturn.com:3478?transport=tcp"],
-    username: "000000002109239097", credential: "AvQhnKWqVVBafEmbRGoxtMG/XKw=" },
-];
+const TURN_SERVERS = [];

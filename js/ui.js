@@ -139,8 +139,8 @@ const UI = (() => {
       <label class="f">Minimapa al empezar</label><div class="seg" id="cMap"></div>
       <label class="f">Mostrar FPS</label><div class="seg" id="cFps"></div>
       <h2 style="margin-top:16px">Online: servidor retransmisor (TURN)</h2>
-      <p>Hace falta para jugar con amigos en redes distintas (otro wifi o datos móviles). Crea una cuenta gratis en
-      <b>expressturn.com</b> y copia aquí los datos que te da. Con que lo tenga quien crea la sala suele bastar.</p>
+      <p>Hace falta para jugar con amigos en redes distintas (otro wifi o datos móviles). Cada jugador crea su propia cuenta gratis en
+      <b>expressturn.com</b> y copia aquí los datos que le da (servidor, usuario y clave). Se guardan solo en este dispositivo.</p>
       <label class="f">Servidor (ej. relay1.expressturn.com:3478)</label><input type="text" id="tUrl" value="${esc(c.turn.url)}" autocomplete="off" autocapitalize="off">
       <label class="f">Usuario</label><input type="text" id="tUser" value="${esc(c.turn.user)}" autocomplete="off" autocapitalize="off">
       <label class="f">Clave</label><input type="text" id="tPass" value="${esc(c.turn.pass)}" autocomplete="off" autocapitalize="off">
