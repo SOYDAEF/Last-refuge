@@ -9,7 +9,7 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) {} },
 };
 function loadCfg() {
-  const cfg = { name: "Superviviente", hat: "none", dark: 1.0, fps: false, minimap: true, game: normSettings(null), touch: IS_TOUCH, aimAssist: true };
+  const cfg = { name: "Superviviente", hat: "none", dark: 1.0, fps: false, minimap: true, game: normSettings(null), touch: IS_TOUCH, aimAssist: true, turn: { url: "", user: "", pass: "" } };
   try {
     const d = JSON.parse(store.get(CFG_KEY) || "{}");
     if (typeof d.name === "string" && d.name.trim()) cfg.name = d.name.trim().slice(0, 14);
@@ -17,6 +17,7 @@ function loadCfg() {
     if (typeof d.dark === "number") cfg.dark = clamp(d.dark, 0.5, 1);
     for (const k of ["fps", "minimap", "touch", "aimAssist"]) if (typeof d[k] === "boolean") cfg[k] = d[k];
     if (d.game) cfg.game = normSettings(d.game);
+    if (d.turn && typeof d.turn === "object") cfg.turn = { url: String(d.turn.url || ""), user: String(d.turn.user || ""), pass: String(d.turn.pass || "") };
   } catch (e) {}
   return cfg;
 }
@@ -93,8 +94,18 @@ class App {
       return true;
     } catch (e) { console.error(e); return false; }
   }
+  applyTurn() {                          // retransmisores propios (config.js y Ajustes)
+    const list = TURN_SERVERS.slice(), t = this.cfg.turn;
+    if (t && t.url && t.user && t.pass) {
+      const host = t.url.trim().replace(/^turns?:/, "").replace(/\?.*$/, "");
+      list.push({ urls: ["turn:" + host, "turn:" + host + "?transport=tcp"], username: t.user.trim(), credential: t.pass.trim() });
+    }
+    ZNet.config({ extraTurn: list });
+    return list.length;
+  }
   startHost() {
     this.stopNet();
+    this.applyTurn();
     const g = new Game(parseSeed(""), { settings: this.cfg.game, name: this.cfg.name, hat: this.cfg.hat });
     this.host = new Host(g);
     this.begin(g, "host");
@@ -102,6 +113,7 @@ class App {
   }
   startJoin(code) {
     this.stopNet();
+    this.applyTurn();
     this.client = new Client(code, this.cfg.name, this.cfg.hat);
     UI.connecting();
     const tick = () => {
@@ -112,7 +124,11 @@ class App {
         cg.p.hat = this.cfg.hat;
         this.begin(cg, "client");
       } else if (r === "wait") setTimeout(tick, 120);
-      else { this.stopNet(); UI.online("No se pudo conectar: " + r); }
+      else {
+        this.stopNet();
+        const hint = /retransmisor=0/.test(r) && !this.applyTurn() ? "\n\nSolución: configura un servidor retransmisor (TURN) gratis en Ajustes → Online. Basta con que lo tenga quien crea la sala." : "";
+        UI.online("No se pudo conectar: " + r + hint);
+      }
     };
     tick();
   }

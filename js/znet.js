@@ -107,7 +107,7 @@
   }
   function newPC() {                           // devuelve una promesa con la conexion
     return tempTurn().then(function (t) {
-      var servers = [{ urls: cfg.stun }].concat(t ? [t] : []).concat(cfg.turn || []);
+      var servers = [{ urls: cfg.stun }].concat(cfg.extraTurn || []).concat(t ? [t] : []).concat(cfg.turn || []);
       return new RTCPeerConnection({ iceServers: servers });
     });
   }

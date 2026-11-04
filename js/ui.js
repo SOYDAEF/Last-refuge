@@ -102,7 +102,9 @@ const UI = (() => {
       <div class="row"><input type="text" id="oCode" maxlength="6" placeholder="ABC123" style="flex:2;text-transform:uppercase;letter-spacing:4px">
       <button class="btn" id="bJoin" style="flex:1">Unirse</button></div>
       <div class="status">${esc(msg || "")}</div>
+      <button class="btn" id="bTurn">${app.cfg.turn.url ? "✓ Retransmisor configurado (cambiar)" : "Configurar retransmisor (para redes distintas)"}</button>
       <button class="btn" id="bBack">Volver</button>`);
+    on("bTurn", () => settings("online"));
     const setName = () => { const v = $("oName").value.trim().slice(0, 14); if (v) { app.cfg.name = v; saveCfg(); } };
     on("bHost", () => { setName(); app.startHost(); goFull(); });
     on("bJoin", () => {
@@ -136,7 +138,13 @@ const UI = (() => {
       <label class="f">Ayuda para apuntar en celular</label><div class="seg" id="cAim"></div>
       <label class="f">Minimapa al empezar</label><div class="seg" id="cMap"></div>
       <label class="f">Mostrar FPS</label><div class="seg" id="cFps"></div>
-      <button class="btn primary" id="bOk">Listo</button>`, from !== "title");
+      <h2 style="margin-top:16px">Online: servidor retransmisor (TURN)</h2>
+      <p>Hace falta para jugar con amigos en redes distintas (otro wifi o datos móviles). Crea una cuenta gratis en
+      <b>expressturn.com</b> y copia aquí los datos que te da. Con que lo tenga quien crea la sala suele bastar.</p>
+      <label class="f">Servidor (ej. relay1.expressturn.com:3478)</label><input type="text" id="tUrl" value="${esc(c.turn.url)}" autocomplete="off" autocapitalize="off">
+      <label class="f">Usuario</label><input type="text" id="tUser" value="${esc(c.turn.user)}" autocomplete="off" autocapitalize="off">
+      <label class="f">Clave</label><input type="text" id="tPass" value="${esc(c.turn.pass)}" autocomplete="off" autocapitalize="off">
+      <button class="btn primary" id="bOk">Listo</button>`, from === "pause");
     seg("cHat", HATS.map(h => HAT_NAMES[h]), HATS.indexOf(c.hat), i => { c.hat = HATS[i]; if (app.game) app.act("hat", c.hat); });
     seg("cTouch", ["Teclado y ratón", "Táctiles"], c.touch ? 1 : 0, i => { c.touch = i === 1; app.resize(); });
     seg("cAim", ["No", "Sí"], c.aimAssist ? 1 : 0, i => { c.aimAssist = i === 1; });
@@ -146,8 +154,9 @@ const UI = (() => {
     on("bOk", () => {
       const v = $("cName").value.trim().slice(0, 14);
       if (v) c.name = v;
+      c.turn = { url: $("tUrl").value.trim(), user: $("tUser").value.trim(), pass: $("tPass").value.trim() };
       saveCfg();
-      if (from === "title") title(); else pause();
+      if (from === "title") title(); else if (from === "online") online(); else pause();
       if (app.state === "play") setTouch(c.touch);
     });
   }
