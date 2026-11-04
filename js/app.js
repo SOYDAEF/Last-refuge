@@ -126,7 +126,7 @@ class App {
       } else if (r === "wait") setTimeout(tick, 120);
       else {
         this.stopNet();
-        const hint = /retransmisor=0/.test(r) && !this.applyTurn() ? "\n\nSolución: configura un servidor retransmisor (TURN) gratis en Ajustes → Online. Basta con que lo tenga quien crea la sala." : "";
+        const hint = /retransmisor=0/.test(r) ? "\n\nEl retransmisor no respondió. Revisen que los dos tengan internet y la versión nueva del juego (recarguen la página)." : "";
         UI.online("No se pudo conectar: " + r + hint);
       }
     };
