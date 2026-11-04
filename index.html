@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#14161f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Last Refuge: supervivencia zombi en vista cenital. Juega en el navegador, en PC o celular.">
+<title>Last Refuge</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<!-- controles táctiles (solo en celular) -->
+<div id="touch" class="hidden">
+  <div id="tTop">
+    <button class="tb" data-act="inventory">🎒</button>
+    <button class="tb" data-act="map">🗺️</button>
+    <button class="tb hidden" data-act="chat" id="tChat">💬</button>
+    <button class="tb" data-act="menu">⏸</button>
+  </div>
+  <button id="tInteract" class="tbig hidden" data-act="interact">Interactuar</button>
+  <div id="tPad">
+    <button class="tb" data-act="reload" title="Recargar">🔄<span>Recargar</span></button>
+    <button class="tb" data-act="throw" title="Lanzar">🧨<span>Lanzar</span></button>
+    <button class="tb" data-act="shove" title="Empujar">✋<span>Empujar</span></button>
+    <button class="tb" data-act="cycle" title="Cambiar arma">🔪<span>Arma</span></button>
+    <button class="tb" data-act="flash" title="Linterna">🔦<span>Luz</span></button>
+    <button class="tb toggle" data-act="sneak" title="Furtivo">🥷<span>Furtivo</span></button>
+    <button class="tb toggle" data-act="run" title="Correr">🏃<span>Correr</span></button>
+    <button class="tb" data-act="consume" title="Comer/beber">🍞<span>Comer</span></button>
+    <button class="tb" data-act="bandage" title="Venda">🩹<span>Venda</span></button>
+    <button class="tb toggle" data-act="build" title="Construir">🔨<span>Construir</span></button>
+    <button class="tb" data-act="demolish" title="Destruir (mantener)">⛏️<span>Destruir</span></button>
+  </div>
+  <div id="tBuild" class="hidden"></div>
+  <div id="tHint">Izquierda: moverse · Derecha: apuntar y atacar</div>
+</div>
+
+<!-- inventario -->
+<div id="inv" class="overlay hidden">
+  <div class="invHead">
+    <h2>Inventario</h2>
+    <button class="btn small" id="invClose">Cerrar ✕</button>
+  </div>
+  <div class="invBody">
+    <div class="invPanel" id="invMine">
+      <div class="invTitle" id="invMineTitle"></div>
+      <div class="slot" id="invBack"></div>
+      <div class="list" id="invMineList"></div>
+    </div>
+    <div class="invPanel" id="invCont">
+      <div class="invTitle" id="invContTitle"></div>
+      <div class="list" id="invContList"></div>
+    </div>
+  </div>
+  <div class="invDesc" id="invDesc"></div>
+</div>
+
+<!-- menús -->
+<div id="menu" class="overlay"></div>
+
+<!-- chat -->
+<div id="chatBox" class="hidden"><input id="chatIn" maxlength="80" placeholder="Escribe y pulsa Enter"><button class="btn small" id="chatSend">Enviar</button></div>
+
+<div id="rotate" class="hidden">Gira el teléfono para jugar mejor 📱↻</div>
+
+<script src="js/data.js"></script>
+<script src="js/art.js"></script>
+<script src="js/map.js"></script>
+<script src="js/game.js"></script>
+<script src="js/znet.js"></script>
+<script src="js/net.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
