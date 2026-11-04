@@ -2,7 +2,7 @@
 "use strict";
 
 const SAVE_KEY = "lastrefuge_save", CFG_KEY = "lastrefuge_cfg";
-const LQ = 4;                                   // la luz se calcula a 1/4 de resolución
+const LQ = 4; const STICK_R = 58;                                   // la luz se calcula a 1/4 de resolución
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
@@ -231,32 +231,43 @@ class App {
       if (this.state !== "play" || this.menuOpen || this.invOpen) return;
       UI.setTouch(true);
       e.preventDefault();
-      const side = e.clientX < this.cssW * 0.42 ? "L" : "R";
+      // joysticks fijos: el izquierdo se activa tocando la mitad izquierda; el derecho, tocando cerca de él
+      const cL = this.stickCenter("L"), cR = this.stickCenter("R");
+      let side = null;
+      if (e.clientX < this.cssW * 0.42) side = "L";
+      else if (hypot(e.clientX - cR[0], e.clientY - cR[1]) < STICK_R * 1.9) side = "R";
+      if (!side) { this.tapStart = { id: e.pointerId, x: e.clientX, y: e.clientY, t0: performance.now() }; return; }
       if (this.sticks[side]) return;
-      this.sticks[side] = { id: e.pointerId, ox: e.clientX, oy: e.clientY, x: e.clientX, y: e.clientY, t0: performance.now(), moved: 0 };
+      const c = side === "L" ? cL : cR;
+      this.sticks[side] = { id: e.pointerId, ox: c[0], oy: c[1], x: e.clientX, y: e.clientY, t0: performance.now(), moved: 0, sx: e.clientX, sy: e.clientY };
     } else {
       for (const side of ["L", "R"]) {
         const s = this.sticks[side];
         if (!s || s.id !== e.pointerId) continue;
-        if (phase === "move") { s.x = e.clientX; s.y = e.clientY; s.moved = Math.max(s.moved, hypot(s.x - s.ox, s.y - s.oy)); }
-        else {
-          if (side === "R" && s.moved < 12 && performance.now() - s.t0 < 300) this.onTap(s.ox, s.oy);
-          this.sticks[side] = null;
-        }
+        if (phase === "move") { s.x = e.clientX; s.y = e.clientY; s.moved = Math.max(s.moved, hypot(s.x - s.sx, s.y - s.sy)); }
+        else this.sticks[side] = null;
+      }
+      const t = this.tapStart;
+      if (phase === "up" && t && t.id === e.pointerId) {
+        if (hypot(e.clientX - t.x, e.clientY - t.y) < 14 && performance.now() - t.t0 < 350) this.onTap(t.x, t.y);
+        this.tapStart = null;
       }
     }
   }
-  stickVec(s, radius = 56) {
+  stickCenter(side) {                      // posición fija de cada joystick
+    const H = this.cssH, W = this.cssW, b = Math.min(100, Math.max(78, H * 0.22));
+    if (side === "L") return [Math.max(24, this.safeL || 0) + STICK_R + 26, H - b];
+    let padL = W - 160;
+    const pad = document.getElementById("tPad");
+    if (pad && pad.offsetParent !== null) padL = pad.getBoundingClientRect().left;
+    return [Math.max(W * 0.58, padL - STICK_R - 22), H - b];
+  }
+  stickVec(s, radius = STICK_R) {
     if (!s) return [0, 0, 0];
-    let dx = s.x - s.ox, dy = s.y - s.oy;
-    const d = hypot(dx, dy);
-    if (d > radius) {                      // el joystick sigue al dedo si se va lejos
-      s.ox = s.x - dx / d * radius; s.oy = s.y - dy / d * radius;
-      dx = s.x - s.ox; dy = s.y - s.oy;
-    }
-    const m = Math.min(1, hypot(dx, dy) / radius);
+    const dx = s.x - s.ox, dy = s.y - s.oy, d = hypot(dx, dy);
+    const m = Math.min(1, d / radius);
     if (m < 0.12) return [0, 0, 0];
-    return [dx / radius, dy / radius, m];
+    return [dx / d * m, dy / d * m, m];
   }
   onTap(x, y) {                            // toque corto en el mundo (táctil)
     if (!this.game || !this.game.p.alive) return;
@@ -792,7 +803,7 @@ class App {
     }
     // minimapa
     if (this.showMap && this.minimapC) {
-      const ms = touch ? 96 : 150, mx = touch ? L : W - ms - 10, my = touch ? by + 78 : 10;
+      const ms = touch ? 84 : 150, mx = touch ? L : W - ms - 10, my = touch ? by + 78 : 10;
       ctx.imageSmoothingEnabled = false;
       ctx.globalAlpha = 0.92; ctx.drawImage(this.minimapC, mx, my, ms, ms); ctx.globalAlpha = 1;
       ctx.strokeStyle = "#14161c"; ctx.lineWidth = 2; ctx.strokeRect(mx, my, ms, ms);
@@ -836,14 +847,24 @@ class App {
     this.text(ctx, msg, W / 2, H * 0.22 + 146 * s, 15, [230, 230, 240], "center");
   }
   drawSticks(ctx) {
+    if (this.menuOpen || this.invOpen) return;
     for (const side of ["L", "R"]) {
-      const s = this.sticks[side];
-      if (!s) continue;
-      ctx.strokeStyle = "rgba(255,255,255,0.35)"; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(s.ox, s.oy, 56, 0, TAU); ctx.stroke();
-      ctx.fillStyle = side === "R" ? "rgba(255,120,90,0.45)" : "rgba(255,255,255,0.35)";
+      const s = this.sticks[side], [cx, cy] = this.stickCenter(side);
+      ctx.fillStyle = s ? "rgba(20,22,32,0.35)" : "rgba(20,22,32,0.25)";
+      ctx.beginPath(); ctx.arc(cx, cy, STICK_R, 0, TAU); ctx.fill();
+      ctx.strokeStyle = s ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.3)"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(cx, cy, STICK_R, 0, TAU); ctx.stroke();
       const v = this.stickVec(s);
-      ctx.beginPath(); ctx.arc(s.ox + v[0] * 56, s.oy + v[1] * 56, 24, 0, TAU); ctx.fill();
+      ctx.fillStyle = side === "R" ? (s ? "rgba(255,120,90,0.7)" : "rgba(255,120,90,0.35)") : (s ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.3)");
+      ctx.beginPath(); ctx.arc(cx + v[0] * STICK_R, cy + v[1] * STICK_R, 26, 0, TAU); ctx.fill();
+      this.text(ctx, side === "L" ? "Mover" : "Atacar", cx, cy + STICK_R + 4, 11, "rgba(255,255,255,0.6)", "center");
+    }
+    const [rx, ry] = this.stickCenter("R"), ib = document.getElementById("tInteract");   // botón amarillo sobre el joystick
+    const pos = `${Math.round(rx)},${Math.round(this.cssH - ry + STICK_R + 14)}`;
+    if (ib && ib.dataset.pos !== pos) {
+      ib.dataset.pos = pos;
+      ib.style.left = Math.round(rx) + "px"; ib.style.right = "auto"; ib.style.transform = "translateX(-50%)";
+      ib.style.bottom = Math.round(this.cssH - ry + STICK_R + 14) + "px";
     }
   }
 }
