@@ -126,7 +126,7 @@ class App {
       } else if (r === "wait") setTimeout(tick, 120);
       else {
         this.stopNet();
-        const hint = /retransmisor=0/.test(r) && !this.applyTurn() ? "\n\nPara jugar en redes distintas, cada jugador necesita su cuenta gratis en expressturn.com: toca «Configurar retransmisor» y copia ahí sus datos." : "";
+        const hint = /retransmisor=0/.test(r) ? "\n\nEl retransmisor no respondió. Revisen que los dos tengan internet y la versión nueva del juego (recarguen la página)." : "";
         UI.online("No se pudo conectar: " + r + hint);
       }
     };
